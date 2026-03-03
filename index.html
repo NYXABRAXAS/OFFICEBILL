@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office Bill Pro</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #fdfdfd; margin: 0; padding-bottom: 100px; }
+        #header { background: #1b5e20; color: white; padding: 20px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        #total-display { font-size: 5rem; font-weight: bold; margin: 0; color: #fff; }
+        
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 15px; }
+        
+        .card { background: white; border-radius: 20px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; border: 2px solid #eee; }
+        .card:active { transform: scale(0.9); background: #f1f8e9; border-color: #4caf50; }
+        .card img { width: 85px; height: 85px; object-fit: contain; }
+        .card p { font-size: 1.2rem; font-weight: bold; margin: 8px 0 0 0; color: #2e7d32; text-transform: uppercase; }
+
+        .controls { position: fixed; bottom: 0; width: 100%; background: white; padding: 15px 0; display: flex; justify-content: space-around; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); }
+        .btn { padding: 15px 25px; border-radius: 12px; border: none; font-size: 1.1rem; font-weight: bold; cursor: pointer; color: white; width: 45%; }
+        .btn-wa { background: #25D366; }
+        .btn-reset { background: #e74c3c; }
+        
+        /* Admin section hidden unless needed */
+        .admin { background: #f4f4f4; padding: 20px; margin-top: 20px; border-top: 2px solid #ddd; }
+        input { width: 80%; padding: 12px; margin: 5px; border-radius: 8px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+
+    <div id="header">
+        <p style="margin:0; letter-spacing: 2px;">TOTAL BILL</p>
+        <div id="total-display">0</div>
+    </div>
+
+    <div class="grid" id="menu-grid">
+        <div class="card" onclick="askPrice('Chai', '☕')">
+            <img src="https://cdn-icons-png.flaticon.com/512/924/924412.png">
+            <p>CHAI</p>
+        </div>
+
+        <div class="card" onclick="askPrice('Chole Bhature', '🍛')">
+            <img src="https://cdn-icons-png.flaticon.com/512/5754/5754439.png">
+            <p>CH. BHATURE</p>
+        </div>
+
+        <div class="card" onclick="askPrice('Chole Kulche', '🍞')">
+            <img src="https://cdn-icons-png.flaticon.com/512/1046/1046771.png">
+            <p>CH. KULCHE</p>
+        </div>
+
+        <div class="card" onclick="askPrice('Omelette', '🍳')">
+            <img src="https://cdn-icons-png.flaticon.com/512/2619/2619584.png">
+            <p>OMELETTE</p>
+        </div>
+
+        <div class="card" onclick="askPrice('Juice', '🥤')">
+            <img src="https://cdn-icons-png.flaticon.com/512/2442/2442006.png">
+            <p>JUICE</p>
+        </div>
+
+        <div class="card" onclick="askPrice('Bike Ride', '🏍️')">
+            <img src="https://cdn-icons-png.flaticon.com/512/2164/2164631.png">
+            <p>BIKE</p>
+        </div>
+
+        <div class="card" onclick="askPrice('Cab/Auto', '🚕')">
+            <img src="https://cdn-icons-png.flaticon.com/512/717/717497.png">
+            <p>CAB / AUTO</p>
+        </div>
+
+        <div class="card" onclick="askPrice('Samosa/Snacks', '🥟')">
+            <img src="https://cdn-icons-png.flaticon.com/512/3449/3449383.png">
+            <p>SAMOSA</p>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-wa" onclick="shareWhatsApp()">WhatsApp</button>
+        <button class="btn btn-reset" onclick="resetDay()">Reset</button>
+    </div>
+
+    <div class="admin">
+        <h3>Add More +</h3>
+        <input type="text" id="name" placeholder="Name">
+        <input type="text" id="img" placeholder="Image URL">
+        <button onclick="addItem()" style="background:#3498db; color:white; border:none; padding:10px 20px; border-radius:5px;">Add New Button</button>
+    </div>
+
+    <script>
+        let total = 0;
+        let items = [];
+
+        function askPrice(name, emoji) {
+            let p = prompt(`Price for ${name}?`);
+            if (p != null && p != "" && !isNaN(p)) {
+                let amount = parseInt(p);
+                total += amount;
+                items.push({name: name, price: amount, time: new Date().toLocaleTimeString()});
+                
+                document.getElementById('total-display').innerText = total;
+                
+                // Voice confirmation
+                let msg = new SpeechSynthesisUtterance(`${amount} rupees added for ${name}`);
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        function shareWhatsApp() {
+            if(items.length === 0) return alert("No items added!");
+            let date = new Date().toLocaleDateString();
+            let text = `*OFFICE BILL REPORT (${date})*%0A%0A`;
+            items.forEach(item => {
+                text += `▪️ ${item.name}: ₹${item.price} _(${item.time})_%0A`;
+            });
+            text += `%0A*TOTAL: ₹${total}*`;
+            window.open(`https://wa.me/?text=${text}`, '_blank');
+        }
+
+        function resetDay() {
+            if(confirm("Start a new day? Everything will be zero.")) {
+                total = 0;
+                items = [];
+                document.getElementById('total-display').innerText = 0;
+            }
+        }
+
+        function addItem() {
+            let n = document.getElementById('name').value;
+            let i = document.getElementById('img').value || "https://cdn-icons-png.flaticon.com/512/706/706164.png";
+            if(!n) return;
+
+            let grid = document.getElementById('menu-grid');
+            let card = document.createElement('div');
+            card.className = "card";
+            card.onclick = function() { askPrice(n, '🔹'); };
+            card.innerHTML = `<img src="${i}"><p>${n}</p>`;
+            grid.appendChild(card);
+        }
+    </script>
+</body>
+</html>
